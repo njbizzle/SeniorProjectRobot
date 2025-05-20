@@ -11,7 +11,7 @@ JOY_STICK_SCALAR = 1 / .7
 
 CONTROLLER_DEADBAND = 0.2
 
-FLYWHEEL_DEADBAND = 0.1;
+FLYWHEEL_DEADBAND = 0.1
 
 # this is 0x30 joystick encoding, thanks chatgpt for this
 def read_stick(data, deadband=True):
@@ -84,8 +84,14 @@ flywheel_speed = 0.0
 flywheel_accel = 0.05
 break_accel = 0.1
 
+data = parse_data(device.read(64))
+
 while True:
-    data = parse_data(device.read(64))
+    try:
+        data = parse_data(device.read(64))
+    except Exception:
+        continue
+
     _, drive = data["left_joystick"]
     turn, _ = data["right_joystick"]
 
@@ -114,4 +120,4 @@ while True:
         line = ser.read_until(b'\n').decode().strip()
         print(f"ESP32 : [{line}]")
 
-    time.sleep(0.05)
+    # time.sleep(0.05)

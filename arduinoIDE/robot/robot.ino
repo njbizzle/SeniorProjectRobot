@@ -13,14 +13,16 @@ const int F_MOTOR_1 = 18;
 const int F_MOTOR_2 = 19;
 const int F_MOTOR_PWM = 21;
 
-const bool R_MOTOR_INVERTED = false;
+const bool R_MOTOR_INVERTED = true;
 const bool L_MOTOR_INVERTED = false;
 const bool F_MOTOR_INVERTED = false;
 
-const bool TURNING_INVERTED = false;
+const bool TURNING_INVERTED = true;
 
 const float DRIVE_DEADBAND = 0.01;
 const float FLYWHEEL_DEADBAND = 0.005;
+
+const int MAX_INPUT_COUNT = 64;
 
 
 BluetoothSerial SerialBT;
@@ -126,31 +128,40 @@ void driveMotor(int in1, int in2, float x, bool inverted) {
   }
 }
 
-
-
 void loop() {
-  // digitalWrite(R_MOTOR_1, HIGH);
-  // digitalWrite(R_MOTOR_2, LOW);
+  char inputBuffer[MAX_INPUT_COUNT];
+  int inputIndex = 0;
+  char c;
 
   // if (false) {
-  if (SerialBT.available()) {
-    String in = SerialBT.readStringUntil('\n');
-    in.trim();
-    // Serial.println("Over Bluetooth : [" + in + "]");
-    // SerialBT.println("Received : " + in);
+  while (SerialBT.available()) {
+    char c = SerialBT.read();
 
-    // connection testing
-    if (in.equals("connect from python")) {
-      Serial.println("Successfully Connected to Bluetooth Transmitter Python Program");
-      SerialBT.println("connected from esp");
-    }
+    if (c == '\n') {
+      inputBuffer[inputIndex] = '\0'; // this is the null terminator, determines the end of a string
+      inputIndex = 0;
+      String in = String(inputBuffer);
+      in.trim();
+      // Serial.println("Over Bluetooth : [" + in + "]");
+      // SerialBT.println("Received : " + in);
 
-    // we got a command
-    if (in.charAt(1) == ',') {
-      // Serial.println("Recived Command : " + in.charAt(0));
-      parse_command(in);
+      Serial.println(in + " <- in");
+      // connection testing
+      if (in.equals("connect from python")) {
+        Serial.println("Successfully Connected to Bluetooth Transmitter Python Program");
+        SerialBT.println("connected from esp");
+      }
+
+      // we got a command
+      if (in.charAt(1) == ',') {
+        // Serial.println("Recived Command : " + in.charAt(0));
+        parse_command(in);
+      }
+    } else if (inputIndex < MAX_INPUT - 1) {
+      inputBuffer[inputIndex++] = c;
+    } else {
+      inputIndex = 0;
     }
   }
-
-  delay(20);
+  delay(5);
 }
